@@ -1,0 +1,74 @@
+INT1 equ 25h
+INT0 equ 24h
+IMR equ 21h
+EOI equ 20h
+COMP equ 11h
+CONT equ 10h
+
+org 3000h
+escribir: mov al, offset fin - offset msj
+          int 7
+   
+          mov al, 0
+          out CONT,al
+          
+          mov al,20h
+          out EOI,al
+
+     
+          iret
+
+
+org 3500h
+TERMINAR: in al, IMR
+          or al, 00000011b
+          out IMR,al
+          
+          mov dl, 1
+          
+          mov al, 20h
+          out EOI,al
+
+          iret
+
+org 80
+dw 3500h
+
+org 40
+dw 3000h
+
+org 1000h
+msj db "hola bro                                              "
+nuevaLINEA db 13
+fin db ?
+
+
+org 2000h
+cli
+
+mov al, 11111100b
+out IMR, al
+
+mov al, 20
+out INT0, al
+
+mov al, 10
+out INT1, al
+
+mov al, 10
+out COMP, al
+
+mov al, 0
+out CONT, al
+
+mov bx, offset msj
+
+mov dl, 0
+
+sti
+
+loop: cmp dl, 1
+      jnz loop
+
+int 0
+end

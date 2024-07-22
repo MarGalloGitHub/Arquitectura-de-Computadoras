@@ -1,0 +1,86 @@
+DATO   EQU 40h
+ESTADO EQU 41h
+PIC EQU 20H
+
+IMR EQU 21H
+INT2 EQU 26H
+
+
+org 3000h
+SELECCIONADO: 
+              mov al , [bx]     ; comparaciones
+              cmp al, 'A'
+              js FINAL
+              cmp al ,'Z'
+              jns FINAL
+              mov ch,1
+              ret
+  
+FINAL: mov ch ,0
+       ret
+
+
+ORG 3500h
+IMPRIMO:
+      call SELECCIONADO
+      cmp ch, 1
+      jnz subir
+      
+    
+      mov al, [bx]   ; mando el dato
+      out DATO, al
+
+
+subir: inc bx
+       cmp bx, offset fin
+       jnz fin3
+
+      in al,IMR    ;con or fuerzo 1 y con and 0
+      or al, 00000100b            ;desahibilito inter
+      out IMR, al
+                                 ;terminar todo
+      in al, ESTADO
+      and al, 01111111b   ;desahibilitamos handshake
+      out ESTADO, al
+      mov cl,1
+
+fin3: mov al, 20h    ;termina interruppcion
+      out PIC, al
+    
+      iret
+
+
+org 40
+DIR_SUB dw 3500H
+
+org 1000h
+cadena db "AeEiIOoUu"
+fin db ?
+
+org 2000h
+
+in al, ESTADO  ;por estado
+AND al, 07fh
+out ESTADO,al
+
+
+cli
+mov bx, offset cadena
+mov cl,0
+mov al, 0FBh
+out IMR,AL          ; configuro el pic y bx de cadena
+mov al , 10
+OUT INT2 , al
+sti
+
+in al, ESTADO
+or al, 10000000b  ; decirle a la subrutina que usamos interrupciones
+out ESTADO,al
+
+
+loop: cmp cl,1
+      jnz loop
+
+
+int 0
+end

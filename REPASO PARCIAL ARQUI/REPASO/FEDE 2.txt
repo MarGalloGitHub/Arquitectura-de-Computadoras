@@ -1,0 +1,51 @@
+DATO   EQU 40h
+ESTADO EQU 41h
+
+org 3000h
+SELECCIONADO: mov al , [bx]     ; comparaciones
+              cmp al, 'A'
+              js FINAL
+              cmp al ,'Z'
+              jns FINAL
+              mov cl,1
+              ret
+  
+FINAL: mov cl ,0
+       ret
+
+
+ORG 3500h
+IMPRIMO: push AX
+poll: in al, ESTADO  ;consulta estado
+      and al, 1
+      JNZ poll
+
+      mov al, [bx]   ; mando el dato
+      out DATO, al
+
+      pop AX
+      ret
+
+org 1000h
+cadena db "AeEiIOoUu"
+fin db ?
+
+org 2000h
+
+in al, ESTADO  ;por estado
+AND al, 07fh
+out ESTADO,al
+
+
+mov bx, offset cadena
+loop: call SELECCIONADO
+      cmp cl, 1
+      jnz NOSALE
+      call IMPRIMO
+NOSALE: inc bx
+       cmp bx, offset fin
+       jnz loop
+
+
+int 0
+end

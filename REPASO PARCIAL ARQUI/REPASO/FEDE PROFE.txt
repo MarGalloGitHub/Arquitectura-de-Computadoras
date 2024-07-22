@@ -1,0 +1,61 @@
+PA equ 30h
+PB equ 31h
+CA equ 32h
+CB equ 33h
+
+org 3000h
+SELECCIONADO: mov al , [bx]     ; comparaciones
+              cmp al, 'A'
+              js FINAL
+              cmp al ,'Z'
+              jns FINAL
+              mov cl,1
+              ret
+  
+FINAL: mov cl ,0
+       ret
+
+
+ORG 3500h
+IMPRIMO: push AX
+poll: in al, PA  ; consulta de estado
+      AND al, 1
+      jnz poll
+      mov al, [bx]       ; mando dato a la impre
+      out PB, al
+
+      in al,PA
+      or al,2    ;fuerzo els trobe 1 para mandar
+      out PA, al
+
+      in al,PA
+      and al, 0FDH   ; strobe en 0 otra vez
+      out PA, al
+
+      pop AX
+
+      ret
+
+org 1000h
+cadena db "AeEiIOoUu"
+fin db ?
+
+org 2000h
+
+mov al, 0   ;configuro PIO
+out CB, al
+mov al, 0FDh
+out CA, al
+
+mov bx, offset cadena
+loop: call SELECCIONADO
+      cmp cl, 1
+      jnz NOSALE
+      call IMPRIMO
+NOSALE: inc bx
+       cmp bx, offset fin
+       jnz loop
+
+
+int 0
+end
